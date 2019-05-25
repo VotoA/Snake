@@ -4,7 +4,7 @@ import pygame as pg
 
 def run_game():
 	pg.init()
-	screen = pg.display.set_mode((1330, 755))
+	screen = pg.display.set_mode((755, 755))
 	pg.display.set_caption("Snake")
 	snake = Snake()
 	food = Food()
@@ -24,14 +24,15 @@ def run_game():
 				elif event.key == pg.K_DOWN:
 					finalMove = 4
 		screen.fill((0,0,0))
-		if count % 750.0 == 0:
+		if count % 1000.0 == 0:
 			snake.changeDirection(finalMove)
-			snake.update()
 			food.draw(screen)
 			snake.draw(screen)
 			if snake.position == food.position:
 				food.generate(snake.positions)
 				snake.updateLength()
+			else:
+				snake.update(False)
 			pg.display.flip()
 		count+=1
 
@@ -47,25 +48,27 @@ class Snake():
 			self.direction = direction
 	def updateLength(self):
 		self.length+=1
-		if self.length == 1560:
+		if self.length == 900:
 			sys.exit()
-		self.positions.append(self.position)
-	def update(self):
+		self.update(True)
+	def update(self, new):
+		if self.position[0] < 0 or self.position[0] > 751 or self.position[1] < 0 or self.position[1] > 751:
+			sys.exit()
 		if self.direction == 1:
-			self.position = ((self.position[0]+25) % 1325, (self.position[1]) % 750)
+			self.position = ((self.position[0]+25), (self.position[1]))
 		elif self.direction == 2:
-			self.position = ((self.position[0]) % 1325, (self.position[1]-25) % 750)
+			self.position = ((self.position[0]), (self.position[1]-25))
 		elif self.direction == 3:
-			self.position = ((self.position[0]-25) % 1325, (self.position[1]) % 750)
+			self.position = ((self.position[0]-25), (self.position[1]))
 		elif self.direction == 4:
-			self.position = ((self.position[0]) % 1325, (self.position[1]+25) % 750)
-		if self.position[0] < 0 or self.position[0] > 1326 or self.position[1] < 0 or self.position[1] > 751
-			sys.exit()
+			self.position = ((self.position[0]), (self.position[1]+25))
 		for pos in self.positions:
 			if self.position == pos:
 				sys.exit()
 		self.positions.append(self.position)
-		self.positions.pop(0)
+		if new == False:
+			self.positions.pop(0)
+		print(self.positions)
 	def draw(self, screen):
 		pg.draw.rect(screen, (255,255,255), (self.position[0], self.position[1], 20, 20))
 		for pos in self.positions:
@@ -75,14 +78,12 @@ class Food():
 	def __init__(self):
 		self.position = (655, 380)
 	def generate(self, positions):
-		taken = False
-		x = random.randint(0, 51)
+		x = random.randint(0, 29)
 		y = random.randint(0, 29)
 		self.position = ((x * 25) + 5, (y * 25) + 5)
 		for pos in positions:
 			if pos == self.position:
 				self.generate(positions)
-			self.position = ((x * 25) + 5, (y * 25) + 5)
 	def draw(self, screen):
 		pg.draw.rect(screen,(168, 18, 18),(self.position[0],self.position[1],20,20))
 
