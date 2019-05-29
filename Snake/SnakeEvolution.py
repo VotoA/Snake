@@ -17,14 +17,6 @@ def run_game(counttime, nNetwork, gen):
 	timer = 0
 	count = 1.0
 	finalMove = 1
-
-	msg = "Generation: "+str(gen)
-	msg_color = (100, 100, 100)
-	bg_color = (230, 230, 230)
-	f = pg.font.SysFont(None, 48)
-	msg_image = f.render(msg, True, msg_color, bg_color)
-	msg_image_rect = msg_image.get_rect()
-
 	while failed == False:
 		for event in pg.event.get():
 			if event.type == pg.QUIT:
@@ -35,7 +27,7 @@ def run_game(counttime, nNetwork, gen):
 				score += 15 - count/counttime
 			foodDirection = snake.getRelativeFoodPosition(food)
 			adjObstacles = snake.getAdjObstacles()
-			decision = nNetwork.evaluate([foodDirection[0], foodDirection[1], foodDirection[2], adjObstacles[0], adjObstacles[1], adjObstacles[2], 1])
+			decision = nNetwork.evaluate([foodDirection[0], foodDirection[1], foodDirection[2], adjObstacles[0], adjObstacles[1], adjObstacles[2], adjObstacles[3], adjObstacles[4], adjObstacles[5], adjObstacles[6], 1])
 			if decision[0] >= decision[1] and decision[0] >= decision[2]:
 				finalMove = snake.direction+1
 			elif decision[1] >= decision[0] and decision[1] >= decision[2]:
@@ -66,7 +58,6 @@ def run_game(counttime, nNetwork, gen):
 					c += 1
 		if timer >= counttime*150:
 			failed = True
-		screen.blit(msg_image, msg_image_rect)
 		count+=1
 		timer+=1
 	return score
@@ -135,33 +126,73 @@ class Snake():
 				return [1, 0, 0]
 		return [0, 1, 0]
 	def getAdjObstacles(self):
-		absolute = [0, 0, 0, 0]
-		relative = [0, 0, 0]
+		absolute = [0, 0, 0, 0, 0, 0, 0, 0]
+		relative = [0, 0, 0, 0, 0, 0, 0,]
 		for pos in self.positions:
 			if self.position[0]+25 == pos[0] and self.position[1] == pos[1] or self.position[0]+25 > 751:
 				absolute[0] = 1
-			if self.position[1]-25 == pos[1] and self.position[0] == pos[0] or self.position[1]-25 < 0:
+			if self.position[0]+25 == pos[0] and self.position[1]-25 == pos[1] or self.position[1]-25 < 0:
 				absolute[1] = 1
-			if self.position[0]-25 == pos[0] and self.position[1] == pos[1] or self.position[0]-25 < 0:
+			if self.position[0] == pos[0] and self.position[1]-25 == pos[1] or self.position[0]-25 < 0:
 				absolute[2] = 1
-			if self.position[1]+25 == pos[1] and self.position[0] == pos[0] or self.position[1]+25 > 751:
+			if self.position[0]-25 == pos[0] and self.position[1]-25 == pos[1] or self.position[1]+25 > 751:
 				absolute[3] = 1
+			if self.position[0]-25 == pos[0] and self.position[1] == pos[1] or self.position[0]+25 > 751:
+				absolute[4] = 1
+			if self.position[0]-25 == pos[0] and self.position[1]+25 == pos[1] or self.position[1]-25 < 0:
+				absolute[5] = 1
+			if self.position[0] == pos[0] and self.position[1]+25 == pos[1] or self.position[0]-25 < 0:
+				absolute[6] = 1
+			if self.position[0]+25 == pos[0] and self.position[1]+25 == pos[1] or self.position[1]+25 > 751:
+				absolute[7] = 1
+		if self.position[0]+25 > 751:
+			absolute[0] = 1
+		if self.position[1]-25 < 0:
+			absolute[2] = 1
+		if self.position[0]-25 < 0:
+			absolute[4] = 1
+		if self.position[1]+25 > 751:
+			absolute[6] = 1
+		if self.position[0]+25 > 751 and self.position[1]-25 < 0:
+			absolute[1] = 1
+		if self.position[0]-25 < 0 and self.position[1]-25 < 0:
+			absolute[3] = 1
+		if self.position[0]-25 < 0 and self.position[1]+25 > 751:
+			absolute[5] = 1
+		if self.position[0]+25 > 751 and self.position[1]+25 > 751:
+			absolute[7] = 1
 		if self.direction == 1:
-			relative[0] = absolute[1]
-			relative[1] = absolute[0]
-			relative[2] = absolute[3]
-		elif self.direction == 2:
-			relative[0] = absolute[2]
-			relative[1] = absolute[1]
-			relative[2] = absolute[0]
-		elif self.direction == 3:
 			relative[0] = absolute[3]
 			relative[1] = absolute[2]
 			relative[2] = absolute[1]
+			relative[3] = absolute[0]
+			relative[4] = absolute[7]
+			relative[5] = absolute[6]
+			relative[6] = absolute[5]
+		elif self.direction == 2:
+			relative[0] = absolute[5]
+			relative[1] = absolute[4]
+			relative[2] = absolute[3]
+			relative[3] = absolute[2]
+			relative[4] = absolute[1]
+			relative[5] = absolute[0]
+			relative[6] = absolute[7]
+		elif self.direction == 3:
+			relative[0] = absolute[7]
+			relative[1] = absolute[6]
+			relative[2] = absolute[5]
+			relative[3] = absolute[4]
+			relative[4] = absolute[3]
+			relative[5] = absolute[2]
+			relative[6] = absolute[1]
 		elif self.direction == 4:
-			relative[0] = absolute[0]
-			relative[1] = absolute[3]
-			relative[2] = absolute[2]
+			relative[0] = absolute[1]
+			relative[1] = absolute[0]
+			relative[2] = absolute[7]
+			relative[3] = absolute[6]
+			relative[4] = absolute[5]
+			relative[5] = absolute[4]
+			relative[6] = absolute[3]
 		return relative
 
 class Food:
@@ -233,10 +264,10 @@ def main():
 	failed = False
 	snakes = {}
 	for num in range(0, 100):
-		snakes[Neural_Network(6,3,1,4,[[[0, 0, 0, 0, 0, 0, 0],[0, 0, 0, 0, 0, 0, 0],[0, 0, 0, 0, 0, 0, 0],[0, 0, 0, 0, 0, 0, 0]],[[0, 0, 0, 0, 0],[0, 0, 0, 0, 0],[0, 0, 0, 0, 0]]], .1)] = 0
+		snakes[Neural_Network(6,3,1,4,[[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],[[0, 0, 0, 0, 0, 0, 0],[0, 0, 0, 0, 0, 0, 0],[0, 0, 0, 0, 0, 0, 0]]], .2)] = 0
 	for snake in snakes:
 			snake.randomizeWeights()
-	for n in range(0, 10):
+	for n in range(0, 100):
 		for snake in snakes:
 			snakes[snake] = run_game(10.0, snake, n)
 		sortedSnakes = sorted(snakes.items(), key=operator.itemgetter(1))
@@ -255,6 +286,8 @@ def main():
 		for num in range(0, 10):
 			snakes[sortedSnakes[0][0]] = 0
 			sortedSnakes.pop(0)
+
+		print(n+1)
 
 if __name__ == "__main__":	
 	main()
